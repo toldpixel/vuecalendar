@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>The Matrix Page</title>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div v-for="(row, rindex) in dividedMonths" :key="rindex" class="row">
+                <div v-for="(monthName,mindex) in row" class="month">
+                    <h1>{{ monthName }}</h1>
+                    <div class="dayHeader">
+                        <div v-for="(day, dayIndex) in daysOfWeek" :key="dayIndex" class="box">   
+                            {{ day.substring(0,3) }}
+                        </div>
+                    </div>
+                    <div v-for="(week, weekIndex) in calendarMatrix[months.indexOf(monthName)]" :key="weekIndex" class="weekrow">
+                        <div :class="[isDateToday(monthName, day) ? 'mark' : '']" v-for="(day, dayIndex) in calendarMatrix[months.indexOf(monthName)][weekIndex]" :key="dayIndex" class="box">
+                                {{ day }}                   
+                        </div>
+                    </div>
+                </div>
+            </div>                
+        </div>
+     </div> 
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue
+        const app = createApp({
+            data() {
+                return {
+                    months: ['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                    year: Number(new Date().getFullYear()),
+                    month: Number(new Date().getMonth()),
+                    day: Number(new Date().getDate()),
+                    calendarMatrix: new Array(12),
+                    daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday","Sunday"],
+                    ctr: 0,
+                }
+            },
+            methods: {
+                getDayInfo(date) {
+                    let dayIndex = date.getDay(); 
+                    dayIndex = dayIndex === 0 ? 6 : dayIndex - 1; 
+                    const dayName = this.daysOfWeek[dayIndex];
+                    return { dayIndex, dayName };
+                },
+                getDaysInMonth(month) {
+                    return Number(new Date(this.year, month+1, 0).getDate().toString());
+                },
+                getWeekDaysArr(month) {  //[[[1,2,3,4,5,6,7][8,9,10,11,12,13,14][15,16,17,18,19,20,21][22,23,24,25,26,27,28][29,30,31,'','','','']]]
+                    let daysInMonth  = this.getDaysInMonth(this.months.indexOf(month))
+                    let weekArr = []
+                    let ctr=1;
+                        for(let j = 0; j < 6; j++) {
+                            let daysArr = []
+                            for(let i = 1; i <= 7; i++ ) {  
+                                if(ctr > daysInMonth) {
+                                    daysArr.push('')
+                                    continue;
+                                }               
+                                daysArr.push(ctr++)
+                            } 
+                            weekArr.push(daysArr)
+                        }
+                       
+                    return weekArr;
+                },
+                isDateToday(month, day) {
+                    const m = this.months.indexOf(month)
+                    return m === this.month && day === this.day ? true : false;
+                },
+                getCalendarMatrix() {
+                    for(let i = 0; i < this.calendarMatrix.length; i++) {
+                        this.calendarMatrix[i] = new Array(6).fill("");
+                        for(let j = 0; j < this.calendarMatrix[i].length; j++) {
+                            this.calendarMatrix[i][j] = new Array(7).fill("");
+                        }
+                    }
+
+                    for(let month = 0; month < this.calendarMatrix.length; month++) {
+                        let dayCounter = 1;
+                        for(let week = 0; week < this.calendarMatrix[month].length; week++) {
+                            for(let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+                                if(dayCounter <= this.getDaysInMonth(month)) {
+                                    let date = new Date(this.year, month, dayCounter);
+                                    if(dayOfWeek === this.getDayInfo(date).dayIndex) {
+                                        this.calendarMatrix[month][week][dayOfWeek] = dayCounter++;
+                                        
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            mounted() {
+                this.getCalendarMatrix()
+            },
+            computed: {
+                dividedMonths() {
+                    const rows = [];
+                    for (let i = 0; i < this.months.length; i+=4) {
+                        rows.push(this.months.slice(i, i+4));
+                    }
+                    return rows;
+                },
+               
+            },
+           
+
+        })
+
+        app.mount('#app')
+    </script>
+</body>
+</html>
+<style>
+.row {
+  display: flex;
+  margin: 20px 0px;
+}
+
+.weekrow {
+  display: flex;
+}
+
+.dayHeader {
+    display: flex;
+
+}
+
+.month {
+  margin-right: 10px;
+}
+
+.box {
+    width: 40px;       /* Width of the box */
+    height: 40px;      /* Height of the box */
+    border: 1px solid #ddd; /* Border color */
+    display: flex;     /* Use Flexbox for centering */
+    align-items: center; /* Vertical centering */
+    justify-content: center; /* Horizontal centering */
+    margin: 5px;       /* Margin around the box */
+    font-size: 16px;   /* Font size of the day number */
+    font-family: Arial, sans-serif; /* Font style */
+    background-color: #f9f9f9; /* Background color of the box */
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2); /* Optional: Box shadow for a subtle effect */
+    cursor: pointer;   /* Change cursor to pointer to indicate interactivity */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.box:hover {
+    background-color: #eaeaea; /* Slightly darker background on hover */
+}
+
+.mark {
+    background-color: red !important;
+}
+</style>
